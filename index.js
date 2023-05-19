@@ -30,7 +30,18 @@ async function run() {
     });
 
     app.get("/toys", async (req, res) => {
-      const cursor = toyCollection.find();
+      const limit = parseInt(req.query.limit) || 20;
+      const cursor = toyCollection.find().limit(limit);
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+    app.get("/myToys", async (req, res) => {
+      console.log(req.query.email);
+      let query = {};
+      if (req.query?.email) {
+        query = { email: req.query.email };
+      }
+      const cursor = toyCollection.find(query).sort("price", 1);
       const result = await cursor.toArray();
       res.send(result);
     });
@@ -38,6 +49,27 @@ async function run() {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await toyCollection.findOne(query);
+      res.send(result);
+    });
+    app.put("/toys/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const updateDoc = req.body
+      const toy = {
+        $set: {
+          price: updateDoc.price,
+          quantity: updateDoc.quantity,
+          description: updateDoc.description,
+        },
+      };
+      const result = await toyCollection.updateOne(query, toy, options);
+      res.send(result)
+    });
+    app.delete("/toys/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await toyCollection.deleteOne(query);
       res.send(result);
     });
 
