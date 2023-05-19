@@ -23,6 +23,22 @@ async function run() {
   try {
     const toyCollection = client.db("Toys").collection("allToys");
 
+
+    const indexKey = {toyName: 1, price: 1}
+    const indexOptions = {name: "toyName"}
+    const result = await toyCollection.createIndex(indexKey, indexOptions)
+
+    app.get("/toySearch/:text", async(req, res)=>{
+      const searchText = req.params.text;
+      const result = await toyCollection.find({
+        $or: [
+          {toyName: {$regex: searchText, $options: "i"}},
+          {price: {$regex: searchText, $options: "i"}},
+        ]
+      }).toArray()
+      res.send(result)
+    })
+
     app.post("/allToys", async (req, res) => {
       const toys = req.body;
       const result = await toyCollection.insertOne(toys);
