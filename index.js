@@ -60,7 +60,7 @@ async function run() {
     // my toys api by email
 
     app.get("/myToys", async (req, res) => {
-      let query = {};
+      let query = {}; 
       if (req.query.email) {
         query = { email: req.query.email };
       }
@@ -114,6 +114,25 @@ async function run() {
       const result = await cursor.toArray();
       res.json(result);
     });
+
+    app.get("/allToys/:text", async (req, res) => {
+      console.log(req.params.text);
+      if (
+        req.params.text === "Lion" ||
+        req.params.text === "Cat" ||
+        req.params.text === "Teddy" ||
+        req.params.text === "Horse" ||
+        req.params.text === "Mouse" ||
+        req.params.text === "Tiger" 
+      ) {
+        const result = await toyCollection
+          .find({ select: req.params.text })
+          .toArray();
+        return res.json(result);
+      }
+      const result = await toyCollection.find({}).toArray()
+      res.json(result)
+    }); 
 
     // await client.db("admin").command({ ping: 1 });
     // console.log(
