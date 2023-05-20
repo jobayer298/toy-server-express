@@ -23,21 +23,24 @@ async function run() {
   try {
     const toyCollection = client.db("Toys").collection("allToys");
 
+    const indexKey = { toyName: 1, price: 1 };
+    const indexOptions = { name: "toyName" };
+    const result = await toyCollection.createIndex(indexKey, indexOptions);
 
-    const indexKey = {toyName: 1, price: 1}
-    const indexOptions = {name: "toyName"}
-    const result = await toyCollection.createIndex(indexKey, indexOptions)
+    // search api
 
-    app.get("/toySearch/:text", async(req, res)=>{
+    app.get("/toySearch/:text", async (req, res) => {
       const searchText = req.params.text;
-      const result = await toyCollection.find({
-        $or: [
-          {toyName: {$regex: searchText, $options: "i"}},
-          {price: {$regex: searchText, $options: "i"}},
-        ]
-      }).toArray()
-      res.send(result)
-    })
+      const result = await toyCollection
+        .find({
+          $or: [
+            { toyName: { $regex: searchText, $options: "i" } },
+            { price: { $regex: searchText, $options: "i" } },
+          ],
+        })
+        .toArray();
+      res.send(result);
+    });
 
     app.post("/allToys", async (req, res) => {
       const toys = req.body;
@@ -45,33 +48,41 @@ async function run() {
       res.send(result);
     });
 
+    // all toys api
+
     app.get("/toys", async (req, res) => {
       const limit = parseInt(req.query.limit) || 20;
       const cursor = toyCollection.find().limit(limit);
       const result = await cursor.toArray();
       res.send(result);
     });
+
+    // my toys api by email
+
     app.get("/myToys", async (req, res) => {
-      console.log(req.query.email);
       let query = {};
       if (req.query?.email) {
         query = { email: req.query.email };
       }
-      const cursor = toyCollection.find(query).sort("price", 1);
+      const cursor = toyCollection.find(query).sort({ price: "asc" });
       const result = await cursor.toArray();
       res.send(result);
     });
+    // single toy api
     app.get("/toys/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await toyCollection.findOne(query);
       res.send(result);
     });
+
+    // update toys api
+
     app.put("/toys/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const options = { upsert: true };
-      const updateDoc = req.body
+      const updateDoc = req.body;
       const toy = {
         $set: {
           price: updateDoc.price,
@@ -80,12 +91,27 @@ async function run() {
         },
       };
       const result = await toyCollection.updateOne(query, toy, options);
-      res.send(result)
+      res.send(result);
     });
+
+    // delete toys api
+
     app.delete("/toys/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await toyCollection.deleteOne(query);
+      res.send(result);
+    });
+
+    //sub category api
+    app.get("/subCategory", async (req, res) => {
+      console.log(req.query.select);
+      let query = {};
+      if (req.query?.select) {
+        query = { select: req.query.select };
+      }
+      const cursor = toyCollection.find(query);
+      const result = await cursor.toArray();
       res.send(result);
     });
 
