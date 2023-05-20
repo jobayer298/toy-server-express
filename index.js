@@ -23,9 +23,9 @@ async function run() {
   try {
     const toyCollection = client.db("Toys").collection("allToys");
 
-    const indexKey = { toyName: 1, price: 1 };
-    const indexOptions = { name: "toyName" };
-    const result = await toyCollection.createIndex(indexKey, indexOptions);
+    // const indexKey = { toyName: 1, price: 1 };
+    // const indexOptions = { name: "toyName" };
+    // const result = await toyCollection.createIndex(indexKey, indexOptions);
 
     // search api
 
@@ -39,13 +39,13 @@ async function run() {
           ],
         })
         .toArray();
-      res.send(result);
+      res.json(result);
     });
 
     app.post("/allToys", async (req, res) => {
       const toys = req.body;
       const result = await toyCollection.insertOne(toys);
-      res.send(result);
+      res.json(result);
     });
 
     // all toys api
@@ -54,26 +54,26 @@ async function run() {
       const limit = parseInt(req.query.limit) || 20;
       const cursor = toyCollection.find().limit(limit);
       const result = await cursor.toArray();
-      res.send(result);
+      res.json(result);
     });
 
     // my toys api by email
 
     app.get("/myToys", async (req, res) => {
       let query = {};
-      if (req.query?.email) {
+      if (req.query.email) {
         query = { email: req.query.email };
       }
       const cursor = toyCollection.find(query).sort({ price: "asc" });
       const result = await cursor.toArray();
-      res.send(result);
+      res.json(result);
     });
     // single toy api
     app.get("/toys/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await toyCollection.findOne(query);
-      res.send(result);
+      res.json(result);
     });
 
     // update toys api
@@ -91,7 +91,7 @@ async function run() {
         },
       };
       const result = await toyCollection.updateOne(query, toy, options);
-      res.send(result);
+      res.json(result);
     });
 
     // delete toys api
@@ -100,25 +100,25 @@ async function run() {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await toyCollection.deleteOne(query);
-      res.send(result);
+      res.json(result);
     });
 
     //sub category api
     app.get("/subCategory", async (req, res) => {
       console.log(req.query.select);
       let query = {};
-      if (req.query?.select) {
+      if (req.query.select) {
         query = { select: req.query.select };
       }
       const cursor = toyCollection.find(query);
       const result = await cursor.toArray();
-      res.send(result);
+      res.json(result);
     });
 
-    await client.db("admin").command({ ping: 1 });
-    console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!"
-    );
+    // await client.db("admin").command({ ping: 1 });
+    // console.log(
+    //   "Pinged your deployment. You successfully connected to MongoDB!"
+    // );
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
@@ -127,7 +127,7 @@ async function run() {
 run().catch(console.dir);
 
 app.get("/", (req, res) => {
-  res.send("server is running");
+  res.json("server is running");
 });
 
 app.listen(port, (req, res) => {
